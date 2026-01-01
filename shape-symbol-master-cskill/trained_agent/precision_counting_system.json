@@ -1,0 +1,132 @@
+{
+  "purpose": "EXACT SYMBOL COUNTS - No estimates, no ranges, no approximations",
+  "goal": "Every symbol counted correctly. Period.",
+
+  "core_rules": {
+    "rule_1": "NEVER use ranges (8-10, ~15, approximately). Either you KNOW the count or you DON'T.",
+    "rule_2": "NEVER use approximation words: about, approximately, roughly, around, ~, maybe",
+    "rule_3": "Every symbol MUST be numbered and located (Symbol 1 at [x,y], Symbol 2 at [x,y]...)",
+    "rule_4": "If you cannot determine exact count, STOP and FLAG for human review",
+    "rule_5": "Verify EVERY count with a second pass using different method",
+    "rule_6": "Overlapping symbols: count each DISTINCT center point or outline",
+    "rule_7": "If image quality prevents accurate count, REQUEST higher resolution"
+  },
+
+  "counting_protocol": {
+    "step_1_grid_overlay": {
+      "action": "Mentally divide image into numbered grid cells (3x3 or 4x4)",
+      "purpose": "Ensures systematic coverage, prevents skipping areas",
+      "output": "Grid cell assignments (A1, A2, B1, B2, etc.)"
+    },
+
+    "step_2_symbol_type_isolation": {
+      "action": "Count ONE symbol type at a time across entire image",
+      "purpose": "Reduces cognitive load, prevents mixing types",
+      "output": "Complete count for Type A before moving to Type B"
+    },
+
+    "step_3_enumeration_with_location": {
+      "action": "Number each symbol with its grid location",
+      "format": "Type A: 1(A1), 2(A1), 3(A2), 4(B1)...",
+      "purpose": "Creates verifiable list, enables recount"
+    },
+
+    "step_4_verification_pass": {
+      "action": "Recount using DIFFERENT method (e.g., column-by-column if first was row-by-row)",
+      "purpose": "Catch missed or double-counted symbols",
+      "output": "Verified count or discrepancy noted"
+    },
+
+    "step_5_discrepancy_resolution": {
+      "action": "If counts don't match, identify WHICH symbols differ",
+      "purpose": "Pinpoint exact source of error",
+      "output": "Reconciled final count"
+    },
+
+    "step_6_confidence_declaration": {
+      "action": "State confidence as CERTAIN or UNCERTAIN",
+      "certain": "I counted [X] symbols. Each is numbered and located.",
+      "uncertain": "I cannot determine exact count. Human review needed for [specific area]."
+    }
+  },
+
+  "output_format": {
+    "correct_example": {
+      "symbol_type": "Circular with radial interior",
+      "count": 7,
+      "locations": [
+        "1: Grid A1, upper-left corner",
+        "2: Grid A1, center",
+        "3: Grid A2, left edge",
+        "4: Grid B1, near structure",
+        "5: Grid B2, isolated",
+        "6: Grid C1, overlapping pair - LEFT symbol",
+        "7: Grid C1, overlapping pair - RIGHT symbol"
+      ],
+      "verification": "Row-by-row: 7. Column-by-column: 7. CONFIRMED.",
+      "confidence": "CERTAIN"
+    },
+
+    "incorrect_examples": [
+      "approximately 7-9 symbols",
+      "about 8 symbols",
+      "~7 symbols visible",
+      "7+ symbols (maybe more hidden)",
+      "I see several circular symbols"
+    ],
+
+    "uncertain_example": {
+      "symbol_type": "Small circles in dense row",
+      "partial_count": 12,
+      "issue": "Grid B3 contains overlapping symbols that cannot be distinguished",
+      "action": "FLAG: Human review needed for Grid B3. Recommend 4x zoom.",
+      "confidence": "UNCERTAIN - count may be 12-15 pending review"
+    }
+  },
+
+  "handling_difficult_scenarios": {
+    "overlapping_symbols": {
+      "method": "Count distinct CENTER POINTS, not outlines",
+      "rationale": "Centers are more reliably distinguishable than edges",
+      "if_centers_unclear": "Count visible outline segments that indicate separate symbols",
+      "last_resort": "FLAG for human review with specific location"
+    },
+
+    "partial_symbols_at_edges": {
+      "rule": "If >50% of symbol visible, COUNT IT. If <50%, DO NOT COUNT.",
+      "rationale": "Consistent rule prevents double-counting across sections",
+      "document": "Note which edge symbols were counted/excluded"
+    },
+
+    "dense_clusters": {
+      "method_1": "Count outer ring first, then inner symbols",
+      "method_2": "Count by concentric zones (edge, middle, center)",
+      "verification": "Both methods must match",
+      "if_mismatch": "FLAG for human review"
+    },
+
+    "low_resolution_areas": {
+      "action": "Do NOT guess. FLAG immediately.",
+      "output": "Area [X] has insufficient resolution. Cannot count. Need higher resolution."
+    }
+  },
+
+  "quality_gates": {
+    "gate_1": "Every symbol must have a number AND location",
+    "gate_2": "Two counting methods must produce same result",
+    "gate_3": "All uncertainties must be explicitly flagged",
+    "gate_4": "Final count must be a single integer (not a range)",
+    "gate_5": "Confidence must be declared as CERTAIN or UNCERTAIN"
+  },
+
+  "failure_modes_to_prevent": [
+    "Estimating instead of counting",
+    "Giving ranges to hedge uncertainty",
+    "Skipping dense areas",
+    "Guessing at overlapping symbols",
+    "Double-counting across section boundaries",
+    "Missing edge symbols",
+    "Confusing different symbol types",
+    "Not verifying counts"
+  ]
+}

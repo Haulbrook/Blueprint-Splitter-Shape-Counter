@@ -1,0 +1,192 @@
+{
+  "source": "Symbol Decomposition Training System",
+  "version": "2.0",
+  "philosophy": "Symbols are NEVER tied to specific plants. The symbol is everything. The legend defines meaning.",
+
+  "core_principles": [
+    "A symbol is a VISUAL PATTERN, not a plant type",
+    "The same symbol can represent different plants on different blueprints",
+    "NEVER assume what a symbol represents without checking the legend",
+    "Focus on IDENTIFYING and DECOMPOSING the symbol accurately",
+    "The legend is the ONLY source of truth for symbol meaning",
+    "Your job: Recognize symbols. The legend's job: Define meaning."
+  ],
+
+  "symbol_decomposition_framework": {
+    "layer_1_outline": {
+      "description": "The outer boundary shape of the symbol",
+      "categories": {
+        "circular": {
+          "variants": ["perfect_circle", "near_circle", "ellipse", "oval"],
+          "edge_types": ["smooth", "scalloped", "wavy", "irregular", "lobed"]
+        },
+        "star": {
+          "variants": ["regular_star", "irregular_star", "starburst"],
+          "point_counts": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, "many"],
+          "point_types": ["sharp", "rounded", "needle-like", "broad"]
+        },
+        "cloud": {
+          "variants": ["simple_cloud", "multi_lobed", "clustered", "irregular_blob"],
+          "lobe_counts": [2, 3, 4, 5, 6, "many"]
+        },
+        "polygon": {
+          "variants": ["triangle", "square", "rectangle", "pentagon", "hexagon", "octagon"],
+          "corner_types": ["sharp", "rounded"]
+        },
+        "organic": {
+          "variants": ["leaf", "teardrop", "crescent", "spiral", "amorphous"]
+        },
+        "linear": {
+          "variants": ["spray", "fountain", "radiating_lines", "grass_blade_cluster"]
+        }
+      }
+    },
+
+    "layer_2_interior_pattern": {
+      "description": "What fills or decorates the inside of the symbol",
+      "categories": {
+        "empty": "No interior fill, outline only",
+        "radial_lines": {
+          "description": "Lines radiating from center outward",
+          "variants": ["straight", "curved", "branching", "forked"],
+          "density": ["sparse", "medium", "dense"]
+        },
+        "segmented": {
+          "description": "Divided into pie-slice or wedge sections",
+          "segment_counts": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, "many"]
+        },
+        "stipple": {
+          "description": "Scattered dots or points",
+          "density": ["sparse", "medium", "dense", "very_dense"]
+        },
+        "hatching": {
+          "description": "Parallel or crossing lines",
+          "types": ["diagonal", "cross_hatch", "horizontal", "vertical"],
+          "density": ["sparse", "medium", "dense"]
+        },
+        "concentric": {
+          "description": "Nested shapes from center",
+          "types": ["rings", "scallops", "irregular_bands"]
+        },
+        "texture": {
+          "description": "Surface pattern suggesting material",
+          "types": ["leaf_texture", "needle_texture", "branch_pattern", "bark_pattern"]
+        },
+        "grid": {
+          "description": "Regular intersecting lines",
+          "types": ["square_grid", "diamond_grid", "irregular_grid"]
+        }
+      }
+    },
+
+    "layer_3_markers": {
+      "description": "Specific marks or indicators within the symbol",
+      "categories": {
+        "center_dot": "Single dot at center",
+        "center_circle": "Small circle at center",
+        "multiple_dots": {
+          "description": "Multiple dots indicating multi-stem or cluster",
+          "counts": [2, 3, 4, 5, "many"]
+        },
+        "cross": "Plus sign or X mark",
+        "target": "Concentric circles at center",
+        "trunk_line": "Line indicating trunk position",
+        "none": "No markers present"
+      }
+    },
+
+    "layer_4_modifiers": {
+      "description": "Additional characteristics that modify the base symbol",
+      "categories": {
+        "size_indicator": ["small", "medium", "large", "specimen"],
+        "grouping": ["single", "pair", "cluster", "mass", "row"],
+        "overlay": ["dashed_outline", "double_outline", "shadow"],
+        "label_position": ["internal", "external_with_leader", "adjacent"]
+      }
+    }
+  },
+
+  "symbol_identification_output_format": {
+    "template": {
+      "outline": {
+        "type": "<category>",
+        "variant": "<specific variant>",
+        "edge": "<edge type if applicable>"
+      },
+      "interior": {
+        "type": "<category>",
+        "variant": "<specific variant if applicable>",
+        "density": "<density if applicable>"
+      },
+      "marker": {
+        "type": "<category>",
+        "details": "<additional details>"
+      },
+      "composite_id": "<outline>_<interior>_<marker>",
+      "confidence": "<0.0-1.0>"
+    },
+    "example": {
+      "outline": {
+        "type": "circular",
+        "variant": "near_circle",
+        "edge": "scalloped"
+      },
+      "interior": {
+        "type": "radial_lines",
+        "variant": "branching",
+        "density": "medium"
+      },
+      "marker": {
+        "type": "center_dot"
+      },
+      "composite_id": "circular_scalloped_radial_branching_centerdot",
+      "confidence": 0.95
+    }
+  },
+
+  "legend_matching_protocol": {
+    "steps": [
+      "1. IDENTIFY the symbol using decomposition framework",
+      "2. LOCATE the legend on the blueprint",
+      "3. SCAN legend for matching symbol pattern",
+      "4. READ the label/description next to the matching symbol",
+      "5. THAT label is what this symbol represents ON THIS PLAN",
+      "6. NEVER assume - always verify against legend"
+    ],
+    "when_no_legend": {
+      "action": "Flag as 'Symbol identified but meaning unknown - no legend available'",
+      "provide": "Complete decomposition for future matching"
+    },
+    "when_symbol_not_in_legend": {
+      "action": "Flag as 'Symbol not found in legend - may be custom or unlisted'",
+      "provide": "Complete decomposition and closest legend matches"
+    }
+  },
+
+  "training_examples_reframed": {
+    "note": "The 200 symbols from training materials are examples of VISUAL PATTERNS, not plant definitions",
+    "usage": [
+      "Use to learn variety of outline shapes",
+      "Use to learn interior pattern types",
+      "Use to learn marker variations",
+      "Use to practice decomposition accuracy",
+      "DO NOT use to assume plant type mappings"
+    ],
+    "the_200_symbols_teach": {
+      "circular_variations": "50 examples of how circular outlines vary",
+      "star_variations": "40 examples of how star/spiky outlines vary",
+      "stippled_variations": "40 examples of how stippled patterns vary",
+      "cloud_variations": "40 examples of how cloud outlines vary",
+      "other_variations": "30 examples of shrub, grass, groundcover patterns"
+    }
+  },
+
+  "critical_rules": [
+    "NEVER say 'This is a deciduous tree' - say 'This symbol has circular outline with radial interior'",
+    "NEVER assume meaning from shape alone",
+    "ALWAYS decompose into outline + interior + marker",
+    "ALWAYS reference the legend for meaning",
+    "ALWAYS provide composite_id for consistent matching",
+    "The symbol IS the data. The legend IS the dictionary."
+  ]
+}
