@@ -1,4 +1,5 @@
 # Blueprint-Splitter-Shape-Counter
+<<<<<<< Updated upstream
 
 AI-powered precision counting system for commercial landscape blueprints. Splits blueprint PDFs into high-resolution sections and counts symbols with absolute accuracy—exact integers only, no estimates.
 
