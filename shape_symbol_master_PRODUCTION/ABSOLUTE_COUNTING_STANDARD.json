@@ -1,0 +1,110 @@
+{
+  "standard": "ABSOLUTE PRECISION - NO EXCEPTIONS",
+
+  "the_only_two_valid_outputs": {
+    "option_1": {
+      "condition": "You can see and count every symbol distinctly",
+      "output": "Single integer (e.g., 7)",
+      "example": "Count: 7"
+    },
+    "option_2": {
+      "condition": "You CANNOT count exactly for ANY reason",
+      "output": "CANNOT COUNT - [specific reason]",
+      "example": "CANNOT COUNT - symbols overlap at grid B2, centers not distinguishable"
+    }
+  },
+
+  "forbidden_outputs": [
+    "4-6",
+    "approximately 5",
+    "around 5",
+    "about 5",
+    "~5",
+    "5 or 6",
+    "at least 5",
+    "maybe 5",
+    "probably 5",
+    "5+",
+    "5-ish",
+    "roughly 5",
+    "I think 5",
+    "looks like 5",
+    "somewhere between",
+    "could be",
+    "estimate",
+    "ballpark"
+  ],
+
+  "why_this_matters": {
+    "business_impact": [
+      "Wrong count = wrong material order",
+      "Wrong count = budget errors (thousands of dollars)",
+      "Wrong count = project delays",
+      "Wrong count = client disputes",
+      "Wrong count = contractor liability"
+    ],
+    "the_truth": "A wrong number presented confidently is WORSE than admitting you cannot count"
+  },
+
+  "the_protocol": {
+    "step_1": "Look at symbol",
+    "step_2": "Can you see its COMPLETE boundary distinctly? YES/NO",
+    "step_3": "Can you see its CENTER distinctly? YES/NO",
+    "step_4": "Is it separated from other symbols? YES/NO",
+    "step_5a": "If ALL YES → Count it, add to total",
+    "step_5b": "If ANY NO → Do NOT count, FLAG the area"
+  },
+
+  "when_to_stop_and_flag": [
+    "Symbols overlap and you cannot distinguish individuals",
+    "Resolution is too low to see boundaries",
+    "Part of symbol is cut off at edge",
+    "Symbol is obscured by text or other elements",
+    "You are uncertain for ANY reason"
+  ],
+
+  "the_mindset": {
+    "wrong": "I think there are about 5, so I'll say 5",
+    "wrong_2": "It could be 4 or 6, so I'll say 5 as middle ground",
+    "wrong_3": "I see 4 clearly but there might be 1-2 more hidden, so 4-6",
+    "correct": "I see 4 symbols with certainty. Area X has overlapping elements I CANNOT COUNT. Total certain: 4. Flagged for review: Area X."
+  },
+
+  "output_template": {
+    "format": {
+      "symbol_type": "[description]",
+      "certain_count": "[integer]",
+      "certain_locations": ["list each with grid position"],
+      "flagged_areas": ["list areas that CANNOT BE COUNTED with reason"],
+      "status": "COMPLETE or INCOMPLETE"
+    },
+    "example": {
+      "symbol_type": "Large circular with diagonal hatch",
+      "certain_count": 4,
+      "certain_locations": [
+        "1: C1 bottom-left",
+        "2: C1 adjacent to #1",
+        "3: C3 bottom-right",
+        "4: C3 adjacent to #3"
+      ],
+      "flagged_areas": [],
+      "status": "COMPLETE"
+    },
+    "example_incomplete": {
+      "symbol_type": "Small cloud shapes",
+      "certain_count": 3,
+      "certain_locations": [
+        "1: A1 isolated left",
+        "2: B2 near path",
+        "3: C2 isolated"
+      ],
+      "flagged_areas": [
+        "A1 cluster: CANNOT COUNT - 3+ symbols overlap, centers not visible",
+        "B1 dense area: CANNOT COUNT - resolution insufficient"
+      ],
+      "status": "INCOMPLETE - human review required for flagged areas"
+    }
+  },
+
+  "final_rule": "If you cannot state a single integer with 100% certainty, you MUST say CANNOT COUNT. There is no middle ground."
+}
