@@ -1,0 +1,513 @@
+<script>
+// ============================================
+// STATE MANAGEMENT
+// ============================================
+const state = {
+  queue: [],           // Files waiting to be processed
+  results: [],         // Aggregated results for all sheets
+  currentSheetIndex: 0,
+  isProcessing: false
+};
+
+// ============================================
+// DOM ELEMENTS
+// ============================================
+const elements = {
+  dropZone: null,
+  fileInput: null,
+  queueSection: null,
+  sheetQueue: null,
+  startProcessing: null,
+  clearQueue: null,
+  progressSection: null,
+  currentSheet: null,
+  progressFill: null,
+  progressText: null,
+  resultsSection: null,
+  grandTotals: null,
+  sheetDetails: null,
+  flaggedAreas: null,
+  exportCSV: null,
+  exportPDF: null,
+  errorDisplay: null,
+  errorMessage: null
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache DOM elements
+  elements.dropZone = document.getElementById('dropZone');
+  elements.fileInput = document.getElementById('fileInput');
+  elements.queueSection = document.getElementById('queueSection');
+  elements.sheetQueue = document.getElementById('sheetQueue');
+  elements.startProcessing = document.getElementById('startProcessing');
+  elements.clearQueue = document.getElementById('clearQueue');
+  elements.progressSection = document.getElementById('progressSection');
+  elements.currentSheet = document.getElementById('currentSheet');
+  elements.progressFill = document.getElementById('progressFill');
+  elements.progressText = document.getElementById('progressText');
+  elements.resultsSection = document.getElementById('resultsSection');
+  elements.grandTotals = document.getElementById('grandTotals');
+  elements.sheetDetails = document.getElementById('sheetDetails');
+  elements.flaggedAreas = document.getElementById('flaggedAreas');
+  elements.exportCSV = document.getElementById('exportCSV');
+  elements.exportPDF = document.getElementById('exportPDF');
+  elements.errorDisplay = document.getElementById('errorDisplay');
+  elements.errorMessage = document.getElementById('errorMessage');
+
+  // Setup event listeners
+  setupEventListeners();
+});
+
+function setupEventListeners() {
+  // Drag and drop
+  elements.dropZone.addEventListener('dragover', handleDragOver);
+  elements.dropZone.addEventListener('dragleave', handleDragLeave);
+  elements.dropZone.addEventListener('drop', handleDrop);
+
+  // File input
+  elements.fileInput.addEventListener('change', handleFileSelect);
+
+  // Queue controls
+  elements.startProcessing.addEventListener('click', startProcessing);
+  elements.clearQueue.addEventListener('click', clearQueue);
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // Export buttons
+  elements.exportCSV.addEventListener('click', exportToCSV);
+  elements.exportPDF.addEventListener('click', exportToPDF);
+}
+
+// ============================================
+// FILE HANDLING
+// ============================================
+function handleDragOver(e) {
+  e.preventDefault();
+  elements.dropZone.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  elements.dropZone.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  elements.dropZone.classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  addFilesToQueue(files);
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  addFilesToQueue(files);
+  e.target.value = ''; // Reset input
+}
+
+function addFilesToQueue(files) {
+  files.forEach(file => {
+    state.queue.push({
+      file: file,
+      name: file.name,
+      status: 'pending'
+    });
+  });
+  updateQueueDisplay();
+  elements.queueSection.classList.remove('hidden');
+}
+
+function updateQueueDisplay() {
+  elements.sheetQueue.innerHTML = state.queue.map((item, index) => `
+    <div class="queue-item ${item.status}">
+      <span class="queue-number">${index + 1}</span>
+      <span class="queue-name">${escapeHtml(item.name)}</span>
+      <span class="queue-status">${getStatusLabel(item.status)}</span>
+      ${item.status === 'pending' ? `<button class="queue-remove" onclick="removeFromQueue(${index})">&times;</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    pending: 'Waiting',
+    processing: 'Processing...',
+    complete: 'Done',
+    error: 'Error'
+  };
+  return labels[status] || status;
+}
+
+function removeFromQueue(index) {
+  state.queue.splice(index, 1);
+  if (state.queue.length === 0) {
+    elements.queueSection.classList.add('hidden');
+  }
+  updateQueueDisplay();
+}
+
+function clearQueue() {
+  state.queue = [];
+  elements.queueSection.classList.add('hidden');
+  updateQueueDisplay();
+}
+
+// ============================================
+// IMAGE SPLITTING
+// ============================================
+async function splitImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      img.onload = function() {
+        const sections = [];
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Calculate section dimensions (2 rows x 3 columns)
+        const sectionWidth = Math.floor(img.width / 3);
+        const sectionHeight = Math.floor(img.height / 2);
+
+        // Grid layout: [1|2|3] / [4|5|6]
+        const grid = [
+          { id: 1, row: 0, col: 0 },
+          { id: 2, row: 0, col: 1 },
+          { id: 3, row: 0, col: 2 },
+          { id: 4, row: 1, col: 0 },
+          { id: 5, row: 1, col: 1 },
+          { id: 6, row: 1, col: 2 }
+        ];
+
+        grid.forEach(section => {
+          canvas.width = sectionWidth;
+          canvas.height = sectionHeight;
+
+          // Draw the section of the image
+          ctx.drawImage(
+            img,
+            section.col * sectionWidth,  // source x
+            section.row * sectionHeight, // source y
+            sectionWidth,                // source width
+            sectionHeight,               // source height
+            0, 0,                         // dest x, y
+            sectionWidth, sectionHeight   // dest width, height
+          );
+
+          // Convert to base64
+          const base64 = canvas.toDataURL('image/png');
+          sections.push({
+            id: section.id,
+            data: base64
+          });
+        });
+
+        resolve(sections);
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target.result;
+    };
+
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============================================
+// PROCESSING
+// ============================================
+async function startProcessing() {
+  if (state.isProcessing || state.queue.length === 0) return;
+
+  state.isProcessing = true;
+  state.currentSheetIndex = 0;
+  state.results = [];
+
+  elements.startProcessing.disabled = true;
+  elements.clearQueue.disabled = true;
+  elements.progressSection.classList.remove('hidden');
+  elements.resultsSection.classList.add('hidden');
+
+  try {
+    for (let i = 0; i < state.queue.length; i++) {
+      state.currentSheetIndex = i;
+      state.queue[i].status = 'processing';
+      updateQueueDisplay();
+      updateProgress();
+
+      const sheetResult = await processSheet(state.queue[i]);
+      state.results.push(sheetResult);
+
+      state.queue[i].status = sheetResult.overallStatus === 'ERROR' ? 'error' : 'complete';
+      updateQueueDisplay();
+    }
+
+    // Show results
+    displayResults();
+    elements.resultsSection.classList.remove('hidden');
+
+  } catch (error) {
+    showError('Processing failed: ' + error.message);
+  } finally {
+    state.isProcessing = false;
+    elements.startProcessing.disabled = false;
+    elements.clearQueue.disabled = false;
+  }
+}
+
+async function processSheet(queueItem) {
+  const sheetName = queueItem.name;
+  updateCurrentSheet(sheetName);
+
+  // Split image into 6 sections
+  const sections = await splitImage(queueItem.file);
+  const sectionResults = [];
+
+  // Process each section
+  for (const section of sections) {
+    updateSectionProgress(section.id, 'processing');
+
+    try {
+      const result = await new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .processSection(section.data, section.id, sheetName);
+      });
+
+      sectionResults.push(result);
+      updateSectionProgress(section.id, result.success ? 'complete' : 'error');
+
+      // Small delay between API calls to avoid rate limiting
+      await sleep(500);
+
+    } catch (error) {
+      sectionResults.push({
+        success: false,
+        sectionNumber: section.id,
+        error: error.message
+      });
+      updateSectionProgress(section.id, 'error');
+    }
+  }
+
+  // Aggregate results
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(reject)
+      .aggregateResults(sectionResults, sheetName);
+  });
+}
+
+function updateCurrentSheet(name) {
+  elements.currentSheet.querySelector('.sheet-name').textContent = name;
+  // Reset section dots
+  document.querySelectorAll('.section-dot').forEach(dot => {
+    dot.classList.remove('processing', 'complete', 'error');
+  });
+}
+
+function updateSectionProgress(sectionId, status) {
+  const dot = document.querySelector(`.section-dot[data-section="${sectionId}"]`);
+  if (dot) {
+    dot.classList.remove('processing', 'complete', 'error');
+    dot.classList.add(status);
+  }
+}
+
+function updateProgress() {
+  const total = state.queue.length;
+  const current = state.currentSheetIndex + 1;
+  const percent = (state.currentSheetIndex / total) * 100;
+
+  elements.progressFill.style.width = percent + '%';
+  elements.progressText.textContent = `${current} / ${total} sheets`;
+}
+
+// ============================================
+// RESULTS DISPLAY
+// ============================================
+function displayResults() {
+  displayGrandTotals();
+  displaySheetDetails();
+  displayFlaggedAreas();
+}
+
+function displayGrandTotals() {
+  const grandTotals = {};
+  let totalFlags = 0;
+
+  state.results.forEach(sheet => {
+    for (const [type, count] of Object.entries(sheet.symbolTotals || {})) {
+      grandTotals[type] = (grandTotals[type] || 0) + count;
+    }
+    totalFlags += (sheet.allFlaggedAreas || []).length;
+  });
+
+  let html = '<table class="results-table">';
+  html += '<thead><tr><th>Symbol Type</th><th>Total Count</th></tr></thead>';
+  html += '<tbody>';
+
+  for (const [type, count] of Object.entries(grandTotals)) {
+    html += `<tr><td>${escapeHtml(type)}</td><td>${count}</td></tr>`;
+  }
+
+  if (Object.keys(grandTotals).length === 0) {
+    html += '<tr><td colspan="2" class="no-data">No symbols counted</td></tr>';
+  }
+
+  html += '</tbody></table>';
+
+  if (totalFlags > 0) {
+    html += `<div class="flag-warning">${totalFlags} area(s) flagged for human review - see Flagged Areas tab</div>`;
+  }
+
+  elements.grandTotals.innerHTML = html;
+}
+
+function displaySheetDetails() {
+  let html = '';
+
+  state.results.forEach(sheet => {
+    html += `<div class="sheet-result">`;
+    html += `<h3>${escapeHtml(sheet.sheetName)}</h3>`;
+    html += `<span class="sheet-status ${sheet.overallStatus.toLowerCase()}">${sheet.overallStatus}</span>`;
+
+    html += '<table class="results-table">';
+    html += '<thead><tr><th>Symbol Type</th><th>Count</th></tr></thead>';
+    html += '<tbody>';
+
+    for (const [type, count] of Object.entries(sheet.symbolTotals || {})) {
+      html += `<tr><td>${escapeHtml(type)}</td><td>${count}</td></tr>`;
+    }
+
+    if (Object.keys(sheet.symbolTotals || {}).length === 0) {
+      html += '<tr><td colspan="2" class="no-data">No symbols counted</td></tr>';
+    }
+
+    html += '</tbody></table>';
+    html += '</div>';
+  });
+
+  elements.sheetDetails.innerHTML = html || '<p class="no-data">No sheets processed yet</p>';
+}
+
+function displayFlaggedAreas() {
+  const allFlags = [];
+
+  state.results.forEach(sheet => {
+    (sheet.allFlaggedAreas || []).forEach(flag => {
+      allFlags.push({
+        sheet: sheet.sheetName,
+        ...flag
+      });
+    });
+  });
+
+  if (allFlags.length === 0) {
+    elements.flaggedAreas.innerHTML = '<p class="no-flags">No areas flagged for review</p>';
+    return;
+  }
+
+  let html = '<table class="results-table flags-table">';
+  html += '<thead><tr><th>Sheet</th><th>Section</th><th>Symbol Type</th><th>Reason</th></tr></thead>';
+  html += '<tbody>';
+
+  allFlags.forEach(flag => {
+    html += `<tr>
+      <td>${escapeHtml(flag.sheet)}</td>
+      <td>${flag.section || '-'}</td>
+      <td>${escapeHtml(flag.symbolType || '-')}</td>
+      <td>${escapeHtml(flag.reason)}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  elements.flaggedAreas.innerHTML = html;
+}
+
+function switchTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === tabName + 'Tab');
+  });
+}
+
+// ============================================
+// EXPORT FUNCTIONS
+// ============================================
+function exportToCSV() {
+  google.script.run
+    .withSuccessHandler(function(csv) {
+      downloadFile(csv, 'blueprint-counts.csv', 'text/csv');
+    })
+    .withFailureHandler(function(error) {
+      showError('Failed to generate CSV: ' + error.message);
+    })
+    .generateCSV(state.results);
+}
+
+function exportToPDF() {
+  google.script.run
+    .withSuccessHandler(function(html) {
+      // Open HTML in new window for printing/saving as PDF
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
+    })
+    .withFailureHandler(function(error) {
+      showError('Failed to generate PDF: ' + error.message);
+    })
+    .generatePDFContent(state.results);
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================
+// UTILITIES
+// ============================================
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function showError(message) {
+  elements.errorMessage.textContent = message;
+  elements.errorDisplay.classList.remove('hidden');
+}
+
+function hideError() {
+  elements.errorDisplay.classList.add('hidden');
+}
+</script>
